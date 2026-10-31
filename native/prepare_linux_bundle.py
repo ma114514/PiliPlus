@@ -8,7 +8,7 @@ def prepare(bundle: Path, patchelf: str):
     # These libraries belong to the host GTK/C++ runtime. Shipping older copies
     # can hide symbols required by the system WebKit, Pango and GLib libraries.
     for pattern in ('libglib-2.0.so*', 'libfontconfig.so*', 'libpcre2-8.so*',
-                    'libstdc++.so*', 'libgcc_s.so*'):
+                    'libstdc++.so*', 'libgcc_s.so*', 'libasound.so*'):
         for library in (bundle / 'lib').glob(pattern):
             library.unlink()
     subprocess.run([patchelf, '--set-rpath', '$ORIGIN/lib:$ORIGIN',

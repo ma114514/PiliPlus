@@ -27,6 +27,8 @@ Linux artifacts include the matching libmpv headers and relocatable pkg-config
 metadata. The player plugin links against this SDK, and the application loads
 the bundled library explicitly. Each media library uses `$ORIGIN` to resolve
 its bundled dependencies after the application directory is moved.
+The application bundle retains the host GTK, font configuration, C++ and ALSA
+runtime instead of overriding them with copies from the build distribution.
 
 `desktop-capture-test.yml` produces desktop test archives without publishing a
 release. It defaults to Linux; Windows requires an explicit platform selection.
@@ -104,3 +106,13 @@ cases using Linux libmpv. Native cases include GIF/WebP, nonzero start times,
 rotation, non-square pixels and source resolution changes. The Android arm64
 test artifact is `dist/PiliPlus-dev-arm64-v8a-aspect-ratios.apk`, versionCode 4.
 Android device interaction and gallery checks remain manual.
+
+### Linux x64 test archive
+
+The pinned Linux libmpv 0.39.0 and FFmpeg 7.0.2 build passed 109 tests, including
+the actual GIF/WebP export cases. The application compiled in release mode.
+After preparing plugin RPATHs and retaining the host GTK runtime, the archive
+passed dependency/symbol checks and an isolated 12-second startup under Xvfb
+on Fedora 44. The artifact is
+`dist/PiliPlus-dev-linux-x64-aspect-ratios.tar.gz`; extract it and run `piliplus`.
+Interactive playback, audio output and file saving still require manual checks.
