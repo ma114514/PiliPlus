@@ -61,6 +61,20 @@ def patch(platform, source):
                       'URL_HASH SHA512=cb4e3259640721bbd275c723fe4df53d12f9b1673afb3db274c22c6aa457865dccf2d6ea20b4fd4c591f6152e6d4b87516c402015900f06ce9d43af66d3b7a93',
                       text)
         path.write_text(text)
+        metadata = source / 'Windows.winmd'
+        if not metadata.exists():
+            urllib.request.urlretrieve(
+                'https://raw.githubusercontent.com/microsoft/windows-rs/'
+                'ff933fe45cbfdf4a638256181aae26a60932e84e/crates/libs/default/Windows.winmd',
+                metadata)
+        expected = json.loads((ROOT / 'archives.json').read_text())['Windows.winmd']
+        if hashlib.sha256(metadata.read_bytes()).hexdigest() != expected:
+            raise RuntimeError('Windows metadata checksum mismatch')
+        path = source / 'toolchain/cppwinrt.cmake'
+        text = path.read_text().replace(
+            'wget -O <BINARY_DIR>/Windows.winmd  https://github.com/microsoft/windows-rs/raw/master/crates/libs/bindgen/default/Windows.winmd',
+            f'cmake -E copy "{metadata}" <BINARY_DIR>/Windows.winmd')
+        path.write_text(text)
     elif platform in ('ios', 'macos'):
         path = source / 'scripts/ffmpeg/meson.build'
         path.write_text(path.read_text().replace("p = mod.add_project('configure',", "options += [\n" + ''.join("    '" + flag + "',\n" for flag in FLAGS) + "]\n\np = mod.add_project('configure',"))
