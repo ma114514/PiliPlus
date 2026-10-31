@@ -38,8 +38,8 @@ jobs:
       - uses: actions/cache@v4
         if: matrix.platform == 'linux'
         with:
-          path: native/build/linux/ffmpeg.tar.xz
-          key: linux-ffmpeg-source-7.0.2-8646515b
+          path: native/build/linux/ffmpeg.tar.gz
+          key: linux-ffmpeg-source-7.0.2-056cc367
       - id: native-build
         run: python3 native/build.py ${{ matrix.platform }}
       - run: python3 native/verify.py ${{ matrix.platform }}

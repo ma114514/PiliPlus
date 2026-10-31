@@ -5,12 +5,14 @@ output_dir=$2
 prefix="$source_dir/capture-prefix"
 mkdir -p "$prefix"
 cd "$source_dir"
-if ! echo '8646515b638a3ad303e23af6a3587734447cb8fc0a0c064ecdb8e95c4fd8b389  ffmpeg.tar.xz' | sha256sum --check --status 2>/dev/null; then
+if ! echo '056cc3674e69d0e44ae85d8ee6ade11364fc584c2406e5f5d9cfb771e77f5ead  ffmpeg.tar.gz' | sha256sum --check --status 2>/dev/null; then
   curl --fail --location --retry 5 --retry-all-errors --connect-timeout 20 --max-time 180 \
-    https://ffmpeg.org/releases/ffmpeg-7.0.2.tar.xz -o ffmpeg.tar.xz
+    https://codeload.github.com/FFmpeg/FFmpeg/tar.gz/e3a61e91030696348b56361bdf80ea358aef4a19 -o ffmpeg.tar.gz
 fi
-echo '8646515b638a3ad303e23af6a3587734447cb8fc0a0c064ecdb8e95c4fd8b389  ffmpeg.tar.xz' | sha256sum -c -
-tar xf ffmpeg.tar.xz
+echo '056cc3674e69d0e44ae85d8ee6ade11364fc584c2406e5f5d9cfb771e77f5ead  ffmpeg.tar.gz' | sha256sum -c -
+mkdir -p ffmpeg-7.0.2
+tar xf ffmpeg.tar.gz --strip-components=1 -C ffmpeg-7.0.2
+echo '7.0.2' > ffmpeg-7.0.2/VERSION
 pushd ffmpeg-7.0.2
 ./configure --prefix="$prefix" --enable-shared --disable-static --enable-libwebp --enable-libdav1d --enable-gnutls --disable-doc
 make -j"$(nproc)"
