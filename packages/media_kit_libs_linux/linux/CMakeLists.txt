@@ -122,7 +122,10 @@ target_include_directories(
 
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter)
 
-file(GLOB CAPTURE_LIBRARIES "${CMAKE_CURRENT_SOURCE_DIR}/../../../native/artifacts/linux/lib/*.so*")
+get_filename_component(CAPTURE_PLUGIN_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}" REALPATH)
+get_filename_component(CAPTURE_ROOT "${CAPTURE_PLUGIN_SOURCE}/../../../native/artifacts/linux" ABSOLUTE)
+set(ENV{PKG_CONFIG_PATH} "${CAPTURE_ROOT}/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}")
+file(GLOB CAPTURE_LIBRARIES "${CAPTURE_ROOT}/lib/*.so*")
 if(NOT CAPTURE_LIBRARIES)
   message(FATAL_ERROR "Build native capture libraries first: native/README.md")
 endif()

@@ -156,6 +156,8 @@ def build(platform, source, output):
         shutil.copytree(packages[0].parent / 'include', output / 'include', dirs_exist_ok=True)
     else:
         run('bash', str(ROOT / 'linux.sh'), str(source), str(output))
+        from linux_sdk import stage
+        stage(source, output)
     if not any(output.iterdir()): raise RuntimeError('Native build produced no artifacts')
     with (output / 'SHA256SUMS').open('w') as manifest:
         for path in sorted(output.rglob('*')):

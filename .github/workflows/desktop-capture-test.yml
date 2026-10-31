@@ -9,13 +9,18 @@ on:
         type: choice
         default: linux
         options: [all, linux, windows]
+      native_run:
+        description: Reuse Linux media libraries from this workflow run
+        type: string
+        default: ''
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   linux-media:
-    if: inputs.platform != 'windows'
+    if: inputs.platform != 'windows' && inputs.native_run == ''
     uses: ./.github/workflows/capture-native.yml
     with:
       platform: linux
@@ -27,6 +32,7 @@ jobs:
 
   linux:
     needs: linux-media
+    if: ${{ !cancelled() && inputs.platform != 'windows' && (needs.linux-media.result == 'success' || inputs.native_run != '') }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
@@ -36,7 +42,17 @@ jobs:
         with:
           name: capture-native-linux
           path: native/artifacts/linux
+          run-id: ${{ inputs.native_run || github.run_id }}
+          github-token: ${{ github.token }}
       - run: python3 native/verify.py linux
+      - name: Stage pinned media headers for plugin compilation
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from native.build import checkout
+          from native.linux_sdk import stage
+          stage(checkout('linux'), Path('native/artifacts/linux'))
+          PY
       - uses: subosito/flutter-action@v2
         with:
           flutter-version-file: pubspec.yaml
