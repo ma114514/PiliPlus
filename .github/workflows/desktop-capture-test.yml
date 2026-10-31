@@ -7,7 +7,7 @@ on:
     inputs:
       platform:
         type: choice
-        default: all
+        default: linux
         options: [all, linux, windows]
 
 permissions:
@@ -20,7 +20,7 @@ jobs:
     with:
       platform: linux
   windows-media:
-    if: inputs.platform != 'linux'
+    if: inputs.platform == 'all' || inputs.platform == 'windows'
     uses: ./.github/workflows/capture-native.yml
     with:
       platform: windows

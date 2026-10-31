@@ -14,7 +14,7 @@ make -j2
 make install
 popd
 export PKG_CONFIG_PATH="$prefix/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
-meson setup capture-build --prefix="$prefix" -Dlibmpv=true -Dcplayer=true -Dgpl=false
+meson setup capture-build --prefix="$prefix" --libdir=lib -Dlibmpv=true -Dcplayer=true -Dgpl=false
 meson compile -C capture-build
 meson install -C capture-build
 mkdir -p "$output_dir/lib" "$output_dir/bin"
@@ -32,3 +32,7 @@ done
 # A Flutter executable's RUNPATH does not apply to dependencies of dlopen'd
 # libmpv. Each bundled media library must find its siblings after relocation.
 find "$output_dir/lib" -type f -name '*.so*' -exec patchelf --set-rpath '$ORIGIN' {} \;
+test -s "$output_dir/lib/libmpv.so.2"
+if ldd "$output_dir/lib/libmpv.so.2" | grep 'not found'; then
+  exit 1
+fi
