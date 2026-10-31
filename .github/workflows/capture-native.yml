@@ -34,7 +34,7 @@ jobs:
         run: brew install go meson ninja nasm make
       - name: Linux build dependencies
         if: matrix.platform == 'linux'
-        run: sudo apt-get update && sudo apt-get install -y build-essential meson ninja-build pkg-config nasm libwebp-dev libdav1d-dev libgnutls28-dev libass-dev libplacebo-dev libx11-dev libxrandr-dev libxext-dev libxv-dev libegl1-mesa-dev libgl1-mesa-dev libwayland-dev libxkbcommon-dev libpulse-dev libasound2-dev libgtk-3-dev libxi-dev clang
+        run: sudo apt-get update && sudo apt-get install -y build-essential meson ninja-build pkg-config nasm patchelf libwebp-dev libdav1d-dev libgnutls28-dev libass-dev libplacebo-dev libx11-dev libxrandr-dev libxext-dev libxv-dev libegl1-mesa-dev libgl1-mesa-dev libwayland-dev libxkbcommon-dev libpulse-dev libasound2-dev libgtk-3-dev libxi-dev clang
       - run: python3 native/build.py ${{ matrix.platform }}
       - run: python3 native/verify.py ${{ matrix.platform }}
       - uses: subosito/flutter-action@v2
