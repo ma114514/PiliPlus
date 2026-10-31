@@ -46,7 +46,9 @@ flutter test test/player/animation_export_integration_test.dart
 The integration test calls the actual exporter, starts at one second, checks the
 cropped preview and animated GIF/WebP frame sizes, and rejects single-frame
 output. Run this against each platform's actual library with its matching test
-runner; building or listing codecs alone is insufficient. Also check rotated
+runner; building or listing codecs alone is insufficient. On Linux, apply the
+project patches and run `bash native/test_linux.sh` to build the native event
+loop before testing. Also check rotated
 and non-square-pixel video, first/last frames, looping, cancellation, gallery
 animation preservation, save permissions, and ordinary playback on devices.
 
