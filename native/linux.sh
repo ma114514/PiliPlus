@@ -5,12 +5,15 @@ output_dir=$2
 prefix="$source_dir/capture-prefix"
 mkdir -p "$prefix"
 cd "$source_dir"
-curl --fail --location https://ffmpeg.org/releases/ffmpeg-7.0.2.tar.xz -o ffmpeg.tar.xz
+if ! echo '8646515b638a3ad303e23af6a3587734447cb8fc0a0c064ecdb8e95c4fd8b389  ffmpeg.tar.xz' | sha256sum --check --status 2>/dev/null; then
+  curl --fail --location --retry 5 --retry-all-errors --connect-timeout 20 --max-time 180 \
+    https://ffmpeg.org/releases/ffmpeg-7.0.2.tar.xz -o ffmpeg.tar.xz
+fi
 echo '8646515b638a3ad303e23af6a3587734447cb8fc0a0c064ecdb8e95c4fd8b389  ffmpeg.tar.xz' | sha256sum -c -
 tar xf ffmpeg.tar.xz
 pushd ffmpeg-7.0.2
 ./configure --prefix="$prefix" --enable-shared --disable-static --enable-libwebp --enable-libdav1d --enable-gnutls --disable-doc
-make -j2
+make -j"$(nproc)"
 make install
 popd
 export PKG_CONFIG_PATH="$prefix/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
