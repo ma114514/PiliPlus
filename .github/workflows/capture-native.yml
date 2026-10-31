@@ -35,7 +35,8 @@ jobs:
       - name: Linux build dependencies
         if: matrix.platform == 'linux'
         run: sudo apt-get update && sudo apt-get install -y build-essential meson ninja-build pkg-config nasm patchelf libwebp-dev libdav1d-dev libgnutls28-dev libass-dev libplacebo-dev libx11-dev libxrandr-dev libxext-dev libxv-dev libegl1-mesa-dev libgl1-mesa-dev libwayland-dev libxkbcommon-dev libpulse-dev libasound2-dev libgtk-3-dev libxi-dev clang
-      - run: python3 native/build.py ${{ matrix.platform }}
+      - id: native-build
+        run: python3 native/build.py ${{ matrix.platform }}
       - run: python3 native/verify.py ${{ matrix.platform }}
       - uses: subosito/flutter-action@v2
         if: matrix.platform == 'linux'
@@ -51,8 +52,9 @@ jobs:
         run: |
           native/build/linux/capture-prefix/bin/ffmpeg -f lavfi -i testsrc2=size=320x180:rate=15 -t 3 -c:v mpeg4 "$CAPTURE_TEST_VIDEO"
           pwsh -File lib/scripts/patch.ps1 Linux
-          flutter test test/player/animated_capture_test.dart test/player/animation_export_integration_test.dart
+          bash native/test_linux.sh
       - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() && steps.native-build.outcome == 'success' }}
         with:
           name: capture-native-${{ matrix.platform }}
           path: native/artifacts/${{ matrix.platform }}/
