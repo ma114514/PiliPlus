@@ -37,7 +37,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Install build tools
-        run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libwebkit2gtk-4.1-dev libasound2-dev libxi-dev
+        run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config patchelf libgtk-3-dev libwebkit2gtk-4.1-dev libasound2-dev libxi-dev
       - uses: actions/download-artifact@v4
         with:
           name: capture-native-linux
@@ -66,6 +66,7 @@ jobs:
         shell: bash
         run: |
           bundle=build/linux/x64/release/bundle
+          python3 native/prepare_linux_bundle.py "$bundle"
           if ldd "$bundle/piliplus" | grep 'not found'; then exit 1; fi
           for library in "$bundle/lib/"*.so*; do
             if LD_LIBRARY_PATH="$bundle/lib" ldd "$library" | grep 'not found'; then exit 1; fi
