@@ -23,6 +23,16 @@ Retain upstream LICENSE files when distributing binaries. The local plugin
 sources retain the media-kit MIT license; native components retain their own
 licenses.
 
+Linux artifacts include the matching libmpv headers and relocatable pkg-config
+metadata. The player plugin links against this SDK, and the application loads
+the bundled library explicitly. Each media library uses `$ORIGIN` to resolve
+its bundled dependencies after the application directory is moved.
+
+`desktop-capture-test.yml` produces desktop test archives without publishing a
+release. It defaults to Linux; Windows requires an explicit platform selection.
+Its optional `native_run` input reuses a completed Linux media artifact while
+rebuilding the application from the selected branch.
+
 ## Runtime verification
 
 Create a 320x180, three-second sample (for example with FFmpeg `testsrc2`), then:
