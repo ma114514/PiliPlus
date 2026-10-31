@@ -4,16 +4,23 @@ on:
   push:
     branches: [codex/desktop-capture-build]
   workflow_dispatch:
+    inputs:
+      platform:
+        type: choice
+        default: all
+        options: [all, linux, windows]
 
 permissions:
   contents: read
 
 jobs:
   linux-media:
+    if: inputs.platform != 'windows'
     uses: ./.github/workflows/capture-native.yml
     with:
       platform: linux
   windows-media:
+    if: inputs.platform != 'linux'
     uses: ./.github/workflows/capture-native.yml
     with:
       platform: windows

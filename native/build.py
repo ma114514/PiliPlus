@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import urllib.request
@@ -18,7 +19,15 @@ FLAGS = ['--enable-libwebp', '--enable-zlib', '--enable-encoder=gif,png,libwebp,
 
 
 def run(*args, cwd=None, env=None):
-    subprocess.run(args, cwd=cwd, env=env, check=True)
+    try:
+        subprocess.run(args, cwd=cwd, env=env, check=True)
+    except subprocess.CalledProcessError:
+        if cwd:
+            for log in sorted(Path(cwd).glob('build/**/*-err.log')):
+                if log.stat().st_size:
+                    print(f'\n--- {log.relative_to(cwd)} ---', flush=True)
+                    print('\n'.join(log.read_text(errors='replace').splitlines()[-80:]), flush=True)
+        raise
 
 
 def checkout(platform):
@@ -42,6 +51,16 @@ def patch(platform, source):
     elif platform == 'windows':
         path = source / 'packages/ffmpeg.cmake'
         path.write_text(path.read_text().replace('--enable-network', '\n        '.join(FLAGS) + '\n        --enable-network'))
+        # Upstream's dated GCC snapshot has expired from the mirror. Use a
+        # retained release with the digest published in GCC's sha512.sum.
+        path = source / 'toolchain/gcc/gcc.cmake'
+        text = re.sub(r'(?m)^    URL .*$',
+                      '    URL https://gcc.gnu.org/pub/gcc/releases/gcc-14.3.0/gcc-14.3.0.tar.xz',
+                      path.read_text())
+        text = re.sub(r'URL_HASH SHA512=\S+',
+                      'URL_HASH SHA512=cb4e3259640721bbd275c723fe4df53d12f9b1673afb3db274c22c6aa457865dccf2d6ea20b4fd4c591f6152e6d4b87516c402015900f06ce9d43af66d3b7a93',
+                      text)
+        path.write_text(text)
     elif platform in ('ios', 'macos'):
         path = source / 'scripts/ffmpeg/meson.build'
         path.write_text(path.read_text().replace("p = mod.add_project('configure',", "options += [\n" + ''.join("    '" + flag + "',\n" for flag in FLAGS) + "]\n\np = mod.add_project('configure',"))
