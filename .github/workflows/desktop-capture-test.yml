@@ -1,0 +1,87 @@
+name: Desktop capture test builds
+
+on:
+  push:
+    branches: [codex/desktop-capture-build]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux-media:
+    uses: ./.github/workflows/capture-native.yml
+    with:
+      platform: linux
+  windows-media:
+    uses: ./.github/workflows/capture-native.yml
+    with:
+      platform: windows
+
+  linux:
+    needs: linux-media
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install build tools
+        run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libwebkit2gtk-4.1-dev libasound2-dev libxi-dev
+      - uses: actions/download-artifact@v4
+        with:
+          name: capture-native-linux
+          path: native/artifacts/linux
+      - run: python3 native/verify.py linux
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: pubspec.yaml
+          cache: true
+      - name: Apply project patches
+        shell: pwsh
+        run: lib/scripts/patch.ps1 Linux
+      - name: Build Linux x64
+        run: flutter build linux --release --build-number 4 --no-pub
+      - name: Verify library loading and package
+        shell: bash
+        run: |
+          bundle=build/linux/x64/release/bundle
+          if ldd "$bundle/piliplus" | grep 'not found'; then exit 1; fi
+          for library in "$bundle/lib/"*.so*; do
+            if LD_LIBRARY_PATH="$bundle/lib" ldd "$library" | grep 'not found'; then exit 1; fi
+          done
+          tar -czf PiliPlus-dev-linux-x64-aspect-ratios.tar.gz -C "$bundle" .
+          sha256sum PiliPlus-dev-linux-x64-aspect-ratios.tar.gz > PiliPlus-dev-linux-x64-aspect-ratios.tar.gz.sha256
+      - uses: actions/upload-artifact@v7
+        with:
+          name: PiliPlus-dev-linux-x64
+          path: PiliPlus-dev-linux-x64-aspect-ratios.tar.gz*
+          if-no-files-found: error
+
+  windows:
+    needs: windows-media
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v4
+        with:
+          name: capture-native-windows
+          path: native/artifacts/windows
+      - run: python native/verify.py windows
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: pubspec.yaml
+          cache: true
+      - name: Apply project patches
+        shell: pwsh
+        run: lib/scripts/patch.ps1 windows
+      - name: Build Windows x64
+        run: flutter build windows --release --build-number 4 --no-pub
+      - name: Package portable app
+        shell: pwsh
+        run: |
+          Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath PiliPlus-dev-windows-x64-aspect-ratios.zip
+          $hash = (Get-FileHash PiliPlus-dev-windows-x64-aspect-ratios.zip -Algorithm SHA256).Hash.ToLower()
+          "$hash  PiliPlus-dev-windows-x64-aspect-ratios.zip" | Set-Content PiliPlus-dev-windows-x64-aspect-ratios.zip.sha256
+      - uses: actions/upload-artifact@v7
+        with:
+          name: PiliPlus-dev-windows-x64
+          path: PiliPlus-dev-windows-x64-aspect-ratios.zip*
+          if-no-files-found: error
